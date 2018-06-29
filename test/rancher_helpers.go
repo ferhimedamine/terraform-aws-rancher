@@ -66,8 +66,4 @@ func runRancherTest(t *testing.T) {
 		// Verify that we get back a 200 OK with the expected instanceText
 		http_helper.HttpGet(t, instanceURL)
 	})
-	// It can take a minute or so for the Instance to boot up, so retry a few times
-	//maxRetries := 15
-	//timeBetweenRetries := 5 * time.Second
-
 }
