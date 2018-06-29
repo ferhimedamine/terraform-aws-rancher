@@ -1,0 +1,6 @@
+.terraform
+terraform.tfstate
+variables.tf
+Gopkg.*
+vendor/
+.vscode
