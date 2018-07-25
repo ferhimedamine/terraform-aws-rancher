@@ -1,6 +1,11 @@
 provider "aws" {
   version = "~> 1.24.0"
-  region  = "${var.aws_region}"
+  region  = "${var.region}"
+
+  assume_role {
+    role_arn     = "${var.assume_role_arn}"
+    session_name = "rancher"
+  }
 }
 
 data "aws_route53_zone" "public_zone" {
@@ -16,12 +21,14 @@ data "aws_subnet_ids" "subnets" {
   vpc_id = "${data.aws_vpc.selected.id}"
 }
 
-data "aws_ami" "ubuntu" {
+data "aws_ami" "coreos" {
   most_recent = true
 
+  owners = ["595879546273"]
+
   filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
@@ -29,11 +36,21 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] # Canonical
+  filter {
+    name   = "name"
+    values = ["CoreOS-${var.coreos_channel}-*"]
+  }
 }
 
 data "template_file" "rancher" {
-  template = "${file("${path.module}/scripts/aws_launch_configuration.tmpl")}"
+  template = "${file("${path.module}/scripts/rancher.yaml.tmpl")}"
+}
+
+data "ct_config" "rancher" {
+  content      = "${data.template_file.rancher.rendered}"
+  platform     = "ec2"
+  pretty_print = false
+  snippets     = ["${var.rancher_clc_snippets}"]
 }
 
 resource "tls_private_key" "rancher_key" {
@@ -60,6 +77,12 @@ resource "aws_lb" "rancher_external" {
   }
 }
 
+resource "aws_lb_target_group_attachment" "rancher" {
+  target_group_arn = "${aws_lb_target_group.rancher.arn}"
+  target_id        = "${aws_instance.rancher.id}"
+  port             = 443
+}
+
 resource "aws_lb_target_group" "rancher" {
   name     = "${var.unique_name}"
   port     = 443
@@ -73,7 +96,7 @@ resource "aws_lb_target_group" "rancher" {
     interval            = 10
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = 302
+    matcher             = 200
   }
 }
 
@@ -90,36 +113,35 @@ resource "aws_lb_listener" "rancher-external" {
   }
 }
 
-resource "aws_autoscaling_group" "rancher" {
-  name                      = "${var.unique_name}"
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "EC2"
-  desired_capacity          = 1
-  launch_configuration      = "${aws_launch_configuration.rancher.name}"
-  vpc_zone_identifier       = ["${data.aws_subnet_ids.subnets.ids}"]
+resource "aws_ebs_volume" "rancher-etcd" {
+  availability_zone = "${var.region}a"
+  size              = "${var.volume_size}"
+  snapshot_id       = "${var.etcd_ebs_snapshot_id}"
 
-  tag {
-    key                 = "Name"
-    value               = "${var.unique_name}"
-    propagate_at_launch = true
+  tags {
+    Name = "rancher-etcd.${var.unique_name}"
   }
 }
 
-resource "aws_autoscaling_attachment" "rancher" {
-  alb_target_group_arn   = "${aws_lb_target_group.rancher.arn}"
-  autoscaling_group_name = "${aws_autoscaling_group.rancher.name}"
+resource "aws_volume_attachment" "rancher-etcd" {
+  # The device_name will be different on runtime
+  # The device on linux will depend on the type of the instance in AWS
+  device_name = "/dev/sdf"
+
+  volume_id    = "${aws_ebs_volume.rancher-etcd.id}"
+  instance_id  = "${aws_instance.rancher.id}"
+  force_detach = true
 }
 
-resource "aws_launch_configuration" "rancher" {
-  name_prefix                 = "${var.unique_name}-"
-  image_id                    = "${data.aws_ami.ubuntu.image_id}"
+resource "aws_instance" "rancher" {
+  ami                         = "${data.aws_ami.coreos.image_id}"
+  availability_zone           = "${var.region}a"
   instance_type               = "${var.instance_type}"
   key_name                    = "${var.unique_name}"
-  security_groups             = ["${aws_security_group.rancher.id}"]
+  security_groups             = ["${aws_security_group.rancher.name}"]
   associate_public_ip_address = false
-  user_data                   = "${data.template_file.rancher.rendered}"
+  monitoring                  = true
+  user_data                   = "${data.ct_config.rancher.rendered}"
 
   root_block_device = {
     volume_type           = "gp2"
@@ -127,8 +149,8 @@ resource "aws_launch_configuration" "rancher" {
     delete_on_termination = true
   }
 
-  lifecycle = {
-    create_before_destroy = true
+  tags {
+    Name = "${var.unique_name}"
   }
 }
 

@@ -1,0 +1,69 @@
+---
+systemd:
+  units:
+    - name: docker.service
+      enable: true
+    - name: locksmithd.service
+      mask: true
+    - name: format-ebs.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=Formats the ebs device
+        After=sysinit.target
+        Requires=sysinit.target
+        [Service]
+        Type=oneshote
+        Restart=on-failure
+        RestartSec=1min
+        StartLimitInterval=0
+        RemainAfterExit=yes
+        ExecStart=/opt/bin/format-ebs.sh
+        [Install]
+        WantedBy=multi-user.target
+    - name: var-lib-rancher.mount
+      enable: true
+      contents: |
+        [Unit]
+        Description=Mount the drive to /var/lib/rancher
+        Requires=format-ebs.service
+        After=format-ebs.service
+        [Mount]
+        What=/dev/disk/by-label/rancher
+        Where=/var/lib/rancher
+        Type=ext4
+        [Install]
+        WantedBy=multi-user.target
+    - name: rancher.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=init rancher 2.0
+        After=docker.service var-lib-rancher.mount
+        Requires=docker.service var-lib-rancher.mount
+        [Service]
+        StartLimitInterval=0
+        ExecStartPre=/usr/bin/docker pull rancher/rancher:latest
+        ExecStart=/usr/bin/docker run --rm --name rancher -v /var/lib/rancher:/var/lib/rancher -p 443:443 rancher/rancher:latest
+        ExecStop=/usr/bin/docker stop rancher
+        Restart=always
+        RestartSec=10
+        Type=simple
+        [Install]
+        WantedBy=multi-user.target
+storage:
+  files:
+    - path: /etc/hostname
+      filesystem: root
+      mode: 420
+      contents:
+        inline: rancher
+    - path: /opt/bin/format-ebs.sh
+      filesystem: root
+      mode: 0755
+      contents:
+        inline: |
+          #!/bin/bash
+          device=$(lsblk | tail -n1 | awk '{print "/dev/"$1}')
+          # Exit if it's already formated
+          blkid -s TYPE -o value $device |grep ext4 > /dev/null && echo $device already formated || mkfs -t ext4 -L rancher $device

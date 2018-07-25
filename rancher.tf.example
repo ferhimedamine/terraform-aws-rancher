@@ -1,0 +1,24 @@
+module "rancher" {
+  source = "git::https://github.com/cloud104/terraform-aws-rancher//terraform/aws/rancher?ref=<commit-id|tag>"
+
+  assume_role_arn = "arn:aws:iam::<ID>:role/<role-name>"
+  region = "us-east-2"
+  instance_type = "m4.xlarge"
+  volume_size = "100"
+
+  public_domain = "acme.org"
+  unique_name = "rancher"
+
+  coreos_channel = "stable"
+
+  # Use this variable if you want to restore the etcd EBS from a snapshot
+  etcd_ebs_snapshot_id = ""
+}
+
+output "instance_url" {
+  value = "${module.rancher.instance_url}"
+}
+
+output "rancher_ssh_key" {
+  value = "${module.rancher.rancher_ssh_key}"
+}

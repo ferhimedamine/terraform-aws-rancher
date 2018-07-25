@@ -11,7 +11,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-const repoROOT = "../"
+const repoROOT = "../terraform/aws/rancher/"
 
 //const savedAwsRegion = "AwsRegion"
 

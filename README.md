@@ -3,11 +3,27 @@ Rancher on AWS Terraform Module
 
 # Requirements
  - AWS Account and IAM credentials
- - AWS Route53 DNS Zone
+ - AWS Route53 DNS Zone with public domain
  - Terraform v0.11.7
 
+Add the [terraform-provider-ct](https://github.com/coreos/terraform-provider-ct) plugin binary for your system.
+
+```
+wget https://github.com/coreos/terraform-provider-ct/releases/download/v0.3.0/terraform-provider-ct-v0.3.0-linux-amd64.tar.gz
+tar xzf terraform-provider-ct-v0.3.0-linux-amd64.tar.gz
+sudo mv terraform-provider-ct-v0.3.0-linux-amd64/terraform-provider-ct /usr/local/bin/
+```
+
+Add the plugin to your `~/.terraformrc`.
+
+```hcl
+providers {
+  ct = "/usr/local/bin/terraform-provider-ct"
+}
+```
+
 # Setup
-rename variables.tf.example to variables.tf.
+rename rancher.tf.example to rancher.tf.
 
 # Run
 ```bash
