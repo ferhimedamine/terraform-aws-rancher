@@ -121,6 +121,10 @@ resource "aws_ebs_volume" "rancher-etcd" {
   tags {
     Name = "rancher-etcd.${var.unique_name}"
   }
+
+  tags {
+    Snapshot = "true"
+  }
 }
 
 resource "aws_volume_attachment" "rancher-etcd" {
