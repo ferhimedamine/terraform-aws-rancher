@@ -87,30 +87,31 @@ storage:
     - path: /etc/rancher_nginx.conf
       filesystem: root
       mode: 0644
-      contents: |
-        upstream rancher {
-        server 127.0.0.1:8080;
-        }
-
-        map $http_upgrade $connection_upgrade {
-            default Upgrade;
-            ''      close;
-        }
-
-        server {
-          listen 80 http2;
-          server_name ${unique_name}.${public_domain};
-
-          location / {
-              proxy_set_header Host $host;
-              proxy_set_header X-Forwarded-Proto $scheme;
-              proxy_set_header X-Forwarded-Port $server_port;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_pass http://rancher;
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade $http_upgrade;
-              proxy_set_header Connection $connection_upgrade;
-              # This allows the ability for the execute shell window to remain open for up to 15 minutes. Without this parameter, the default is 1 minute and will automatically close.
-              proxy_read_timeout 900s;
+      contents:
+        inline: |
+          upstream rancher {
+          server 127.0.0.1:8080;
           }
-        }
+
+          map $http_upgrade $connection_upgrade {
+              default Upgrade;
+              ''      close;
+          }
+
+          server {
+            listen 80 http2;
+            server_name ${unique_name}.${public_domain};
+
+            location / {
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Port $server_port;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_pass http://rancher;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+                # This allows the ability for the execute shell window to remain open for up to 15 minutes. Without this parameter, the default is 1 minute and will automatically close.
+                proxy_read_timeout 900s;
+            }
+          }
