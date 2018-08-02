@@ -44,6 +44,10 @@ data "aws_ami" "coreos" {
 
 data "template_file" "rancher" {
   template = "${file("${path.module}/scripts/rancher.yaml.tmpl")}"
+  vars {
+    unique_name = "${var.unique_name}"
+    public_domain = "${var.public_domain}"
+  }
 }
 
 data "ct_config" "rancher" {
@@ -80,23 +84,23 @@ resource "aws_lb" "rancher_external" {
 resource "aws_lb_target_group_attachment" "rancher" {
   target_group_arn = "${aws_lb_target_group.rancher.arn}"
   target_id        = "${aws_instance.rancher.id}"
-  port             = 443
+  port             = 80
 }
 
 resource "aws_lb_target_group" "rancher" {
-  name     = "${var.unique_name}"
-  port     = 443
-  protocol = "HTTPS"
+  name     = "${var.unique_name}-http"
+  port     = 80
+  protocol = "HTTP"
   vpc_id   = "${data.aws_vpc.selected.id}"
 
   health_check {
-    protocol            = "HTTPS"
+    protocol            = "HTTP"
     path                = "/"
     timeout             = 5
     interval            = 10
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = 200
+    matcher             = 302
   }
 }
 
@@ -207,8 +211,8 @@ resource "aws_security_group_rule" "http-internal" {
   type                     = "ingress"
   security_group_id        = "${aws_security_group.rancher.id}"
   source_security_group_id = "${aws_security_group.rancher_lb.id}"
-  from_port                = 443
-  to_port                  = 443
+  from_port                = 80
+  to_port                  = 80
   protocol                 = "tcp"
 }
 
