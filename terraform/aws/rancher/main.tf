@@ -98,6 +98,10 @@ resource "aws_lb_target_group" "rancher" {
     unhealthy_threshold = 2
     matcher             = 200
   }
+  stickiness {
+    type = "lb_cookie"
+    enabled = true
+  }
 }
 
 resource "aws_lb_listener" "rancher-external" {
