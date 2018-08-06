@@ -12,7 +12,7 @@ variable volume_size {
 variable region {
   description = "AWS region"
   type        = "string"
-  default     = "us-east-2"
+  default     = "us-east-1"
 }
 
 variable "rancher_clc_snippets" {
@@ -22,7 +22,7 @@ variable "rancher_clc_snippets" {
 }
 
 variable "public_domain" {
-  description = "Public domain to setup dns record for rancher url"
+  description = "Public domain on route53 to setup dns record for rancher url"
   type        = "string"
 }
 
