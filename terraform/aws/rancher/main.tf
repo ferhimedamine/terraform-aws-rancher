@@ -68,7 +68,7 @@ resource "aws_lb" "rancher_external" {
   subnets                          = ["${data.aws_subnet_ids.subnets.ids}"]
   security_groups                  = ["${aws_security_group.rancher_lb.id}"]
   internal                         = false
-  idle_timeout                     = 4000
+  idle_timeout                     = 900
   load_balancer_type               = "application"
   enable_cross_zone_load_balancing = false
 
