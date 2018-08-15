@@ -11,7 +11,11 @@ import (
 	"github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-const repoROOT = "../terraform/aws/rancher/"
+const (
+	repoROOT      = "../terraform/aws/rancher/"
+	publicDomain  = ""
+	assumeRoleArn = ""
+)
 
 //const savedAwsRegion = "AwsRegion"
 
@@ -50,8 +54,10 @@ func runRancherTest(t *testing.T) {
 
 			// Variables to pass to our Terraform code using -var options
 			Vars: map[string]interface{}{
-				"aws_region":  awsRegion,
-				"unique_name": uniqueName,
+				"aws_region":      awsRegion,
+				"unique_name":     uniqueName,
+				"public_domain":   publicDomain,
+				"assume_role_arn": assumeRoleArn,
 			},
 		}
 		test_structure.SaveTerraformOptions(t, tmpDir, terraformOptions)
