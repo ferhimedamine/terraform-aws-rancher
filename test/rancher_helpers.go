@@ -13,8 +13,9 @@ import (
 
 const (
 	repoROOT      = "../terraform/aws/rancher/"
-	publicDomain  = ""
+	publicDomain  = "foo.com"
 	assumeRoleArn = ""
+	coreosChannel = "stable"
 )
 
 //const savedAwsRegion = "AwsRegion"
@@ -58,6 +59,7 @@ func runRancherTest(t *testing.T) {
 				"unique_name":     uniqueName,
 				"public_domain":   publicDomain,
 				"assume_role_arn": assumeRoleArn,
+				"coreos_channel":  coreosChannel,
 			},
 		}
 		test_structure.SaveTerraformOptions(t, tmpDir, terraformOptions)
