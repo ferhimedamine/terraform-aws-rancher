@@ -46,6 +46,7 @@ systemd:
         ExecStartPre=/usr/bin/docker pull rancher/rancher:latest
         ExecStart=/usr/bin/docker run --rm --name rancher  \
                                       -v /var/lib/rancher:/var/lib/rancher \
+                                      -v /var/lib/rancher/auditlog:/var/lib/rancher/auditlog \
                                       -p 80:80 \
                                       -e AUDIT_LEVEL=1 \
                                       -e AUDIT_LOG_PATH=/var/lib/rancher/auditlog/rancher-api-audit.log \
