@@ -53,7 +53,7 @@ systemd:
                                       -e AUDIT_LOG_MAXAGE=10 \
                                       -e AUDIT_LOG_MAXBACKUP=10 \
                                       -e AUDIT_LOG_MAXSIZE=100 \
-                                      rancher/rancher:stable --no-cacerts
+                                      rancher/rancher:v2.0.8 --no-cacerts
         ExecStop=/usr/bin/docker stop rancher
         Restart=always
         RestartSec=10
