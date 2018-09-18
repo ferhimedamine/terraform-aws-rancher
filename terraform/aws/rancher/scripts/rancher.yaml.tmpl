@@ -43,8 +43,17 @@ systemd:
         Requires=docker.service var-lib-rancher.mount
         [Service]
         StartLimitInterval=0
-        ExecStartPre=/usr/bin/docker pull rancher/rancher:latest
-        ExecStart=/usr/bin/docker run --rm --name rancher -v /var/lib/rancher:/var/lib/rancher -p 80:80 rancher/rancher:stable --no-cacerts
+        ExecStartPre=/usr/bin/docker pull rancher/rancher:v2.0.8
+        ExecStart=/usr/bin/docker run --rm --name rancher  \
+                                      -v /var/lib/rancher:/var/lib/rancher \
+                                      -v /var/lib/rancher/auditlog:/var/lib/rancher/auditlog \
+                                      -p 80:80 \
+                                      -e AUDIT_LEVEL=1 \
+                                      -e AUDIT_LOG_PATH=/var/lib/rancher/auditlog/rancher-api-audit.log \
+                                      -e AUDIT_LOG_MAXAGE=10 \
+                                      -e AUDIT_LOG_MAXBACKUP=10 \
+                                      -e AUDIT_LOG_MAXSIZE=100 \
+                                      rancher/rancher:v2.0.8 --no-cacerts
         ExecStop=/usr/bin/docker stop rancher
         Restart=always
         RestartSec=10
