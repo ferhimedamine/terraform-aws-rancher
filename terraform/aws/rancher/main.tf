@@ -67,6 +67,26 @@ resource "aws_key_pair" "generated_key" {
   public_key = "${tls_private_key.rancher_key.public_key_openssh}"
 }
 
+resource "aws_iam_role" "rancher" {
+  name               = "rancher"
+  assume_role_policy = "${file("${path.module}/iam/aws_iam_role_rancher")}"
+}
+
+resource "aws_iam_role_policy" "rancher" {
+  name   = "rancher"
+  role   = "${aws_iam_role.rancher.name}"
+  policy = "${file("${path.module}/iam/aws_iam_route53_policy")}"
+}
+
+resource "aws_iam_instance_profile" "rancher" {
+  name = "rancher"
+  role = "${aws_iam_role.rancher.name}"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 resource "aws_ebs_volume" "rancher-etcd" {
   availability_zone = "${var.region}a"
   size              = "${var.volume_size}"
@@ -104,6 +124,7 @@ resource "aws_instance" "rancher" {
   security_groups             = ["${aws_security_group.rancher.name}"]
   associate_public_ip_address = false
   monitoring                  = true
+  iam_instance_profile        = "${aws_iam_instance_profile.rancher.id}"
   user_data                   = "${data.ct_config.rancher.rendered}"
 
   root_block_device = {
