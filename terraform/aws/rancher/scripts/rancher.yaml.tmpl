@@ -14,9 +14,6 @@ systemd:
         Requires=sysinit.target
         [Service]
         Type=oneshot
-        Restart=on-failure
-        RestartSec=1min
-        StartLimitInterval=0
         RemainAfterExit=yes
         ExecStart=/opt/bin/format-ebs.sh
         [Install]
