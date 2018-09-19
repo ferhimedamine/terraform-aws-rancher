@@ -13,7 +13,7 @@ systemd:
         After=sysinit.target
         Requires=sysinit.target
         [Service]
-        Type=oneshote
+        Type=oneshot
         Restart=on-failure
         RestartSec=1min
         StartLimitInterval=0
@@ -47,7 +47,6 @@ systemd:
         ExecStart=/usr/bin/docker run --rm --name rancher  \
                                       -v /var/lib/rancher:/var/lib/rancher \
                                       -v /var/lib/rancher/auditlog:/var/lib/rancher/auditlog \
-                                      -p 80:80 \
                                       -e AUDIT_LEVEL=1 \
                                       -e AUDIT_LOG_PATH=/var/lib/rancher/auditlog/rancher-api-audit.log \
                                       -e AUDIT_LOG_MAXAGE=10 \
@@ -58,6 +57,30 @@ systemd:
         Restart=always
         RestartSec=10
         Type=simple
+        [Install]
+        WantedBy=multi-user.target
+    - name: letsencrypt.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=lets encrypt
+        After=docker.service
+        Requires=docker.service
+        [Service]
+        StartLimitInterval=0
+        ExecStartPre=/usr/bin/docker pull certbot/dns-route53
+        ExecStart=/usr/bin/docker run --rm --name letsencrypt \
+                                      -v "/root/letsencrypt/log:/var/log/letsencrypt" \
+                                      -v "/etc/letsencrypt:/etc/letsencrypt" \
+                                      -v "/root/letsencrypt/lib:/var/lib/letsencrypt" \
+                                      certbot/dns-route53 \
+                                      certonly -m cloud.build@totvs.com.br \
+                                      --agree-tos \
+                                      --dns-route53 \
+                                      --no-eff-email \
+                                      -d {{unique_name}}.{{public_domain}}
+        Type=oneshot
+        RemainAfterExit=true
         [Install]
         WantedBy=multi-user.target
     - name: nginx.service
@@ -72,8 +95,8 @@ systemd:
         ExecStartPre=/usr/bin/docker pull nginx:latest
         ExecStart=/usr/bin/docker run --rm \
                                       --name nginx \
-                                      --volume /etc/letsencrypt/live/rancher.smartfiscal.info/fullchain.pem:/certs/fullchain.pem \
-                                      --volume /etc/letsencrypt/live/rancher.smartfiscal.info/privkey.pem:/certs/privkey.pem \
+                                      --volume /etc/letsencrypt/live/{{unique_name}}.{{public_domain}}/fullchain.pem:/certs/fullchain.pem \
+                                      --volume /etc/letsencrypt/live/{{unique_name}}.{{public_domain}}/privkey.pem:/certs/privkey.pem \
                                       --volume /etc/rancher_nginx.conf:/etc/nginx/conf.d/default.conf:ro \
                                       -p 80:80 \
                                       -p 443:443 \
@@ -117,7 +140,7 @@ storage:
 
           server {
             listen 443 ssl http2;
-            server_name rancher.smartfiscal.info;
+            server_name {{unique_name}}.{{public_domain}};
             ssl_certificate /certs/fullchain.pem;
             ssl_certificate_key /certs/privkey.pem;
 
@@ -137,6 +160,6 @@ storage:
 
           server {
               listen 80;
-              server_name rancher.smartfiscal.info;
+              server_name {{unique_name}}.{{public_domain}};
               return 301 https://$server_name$request_uri;
           }
