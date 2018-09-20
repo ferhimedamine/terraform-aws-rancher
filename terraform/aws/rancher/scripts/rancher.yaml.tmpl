@@ -110,8 +110,6 @@ systemd:
       contents: |
         [Unit]
         Description=lets encrypt renew
-        After=docker.service
-        Requires=docker.service
         [Service]
         ExecStart=/usr/bin/docker run --rm --name letsencrypt \
                                       -v "/root/letsencrypt/log:/var/log/letsencrypt" \
