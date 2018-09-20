@@ -105,6 +105,32 @@ systemd:
         Type=simple
         [Install]
         WantedBy=multi-user.target
+    - name: letsencrypt-renew.service
+      enable: true
+      contents: |
+        [Unit]
+        Description=lets encrypt renew
+        [Service]
+        ExecStart=/usr/bin/docker run --rm --name letsencrypt \
+                                      -v "/root/letsencrypt/log:/var/log/letsencrypt" \
+                                      -v "/etc/letsencrypt:/etc/letsencrypt" \
+                                      -v "/root/letsencrypt/lib:/var/lib/letsencrypt" \
+                                      certbot/dns-route53 \
+                                      renew \
+                                      --agree-tos \
+                                      --dns-route53 \
+                                      --no-eff-email
+        Type=oneshot
+        ExecStartPost=systemctl restart nginx
+        [Install]
+        WantedBy=multi-user.target
+    - name: letsencrypt-renew.timer
+      enable: true
+      contents: |
+        [Unit]
+        Description=Run letsencrypt-renew.service every Sunday at 11pm
+        [Timer]
+        OnCalendar=Sun *-*-* 23:00:00
 storage:
   files:
     - path: /etc/hostname
