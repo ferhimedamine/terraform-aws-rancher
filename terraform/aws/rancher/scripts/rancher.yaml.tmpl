@@ -110,6 +110,8 @@ systemd:
       contents: |
         [Unit]
         Description=lets encrypt renew
+        After=docker.service
+        Requires=docker.service
         [Service]
         ExecStart=/usr/bin/docker run --rm --name letsencrypt \
                                       -v "/root/letsencrypt/log:/var/log/letsencrypt" \
@@ -122,7 +124,7 @@ systemd:
                                       --no-eff-email
         Type=oneshot
         RemainAfterExit=true
-        ExecStartPost=systemctl restart nginx
+        ExecStartPost=/bin/systemctl restart nginx.service
         [Install]
         WantedBy=multi-user.target
     - name: letsencrypt-renew.timer
