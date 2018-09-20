@@ -121,6 +121,7 @@ systemd:
                                       --dns-route53 \
                                       --no-eff-email
         Type=oneshot
+        RemainAfterExit=yes
         ExecStartPost=systemctl restart nginx
         [Install]
         WantedBy=multi-user.target
