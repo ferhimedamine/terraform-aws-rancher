@@ -85,8 +85,8 @@ systemd:
       contents: |
         [Unit]
         Description=nginx
-        After=rancher.service
-        Requires=rancher.service
+        After=rancher.service letsencrypt.service
+        Requires=rancher.service letsencrypt.service
         [Service]
         StartLimitInterval=0
         ExecStartPre=/usr/bin/docker pull nginx:latest
