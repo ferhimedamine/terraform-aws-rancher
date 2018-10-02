@@ -3,7 +3,7 @@ stages:
   - tf_apply
   - tf_cleanup
 terraform_apply:
-  stage: test
+  stage: tf_apply
   script:
     - "echoo terraform apply..."
   only:
