@@ -9,7 +9,7 @@ terraform apply:
     refs:
       - /^feat.*$/
     variables:
-      - $CI_COMMIT_MESSAGE =~ /#apply/
+      - $CI_COMMIT_MESSAGE =~ /#tf_apply/
   except:
     refs:
       - master
