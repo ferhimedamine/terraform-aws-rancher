@@ -1,10 +1,11 @@
+image: alpine:latest
 stages:
-  - test
-terraform apply:
+  - tf_apply
+  - tf_cleanup
+terraform_apply:
   stage: test
-  image: alpine:latest
   script:
-    - "echo terraform apply..."
+    - "echoo terraform apply..."
   only:
     refs:
       - /^feat.*$/
@@ -13,3 +14,9 @@ terraform apply:
   except:
     refs:
       - master
+
+terraform_cleanup:
+  stage: tf_cleanup
+  script:
+    - "echo terraform destroy..."
+  when: on_failure
