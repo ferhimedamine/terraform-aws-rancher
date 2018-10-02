@@ -5,7 +5,7 @@ stages:
 terraform_apply:
   stage: tf_apply
   script:
-    - "echoo terraform apply..."
+    - "echo terraform apply..."
   only:
     refs:
       - /^feat.*$/
