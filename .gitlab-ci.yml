@@ -1,2 +1,15 @@
-job1:
-  script: "echo starting..."
+stages:
+  - test
+job:
+  stage: test
+  image: alpine:latest
+  script:
+    - "echo terraform apply..."
+  only:
+    refs:
+      - /^feat.*$/
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /#apply/
+  except:
+    refs:
+      - master
