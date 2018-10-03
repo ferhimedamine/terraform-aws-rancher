@@ -75,7 +75,7 @@ systemd:
                                       --agree-tos \
                                       --dns-route53 \
                                       --no-eff-email \
-                                      -d "${unique_name}.${public_domain}"
+                                      -d "*.${public_domain}"
         Type=oneshot
         RemainAfterExit=true
         [Install]
@@ -92,8 +92,8 @@ systemd:
         ExecStartPre=/usr/bin/docker pull nginx:latest
         ExecStart=/usr/bin/docker run --rm \
                                       --name nginx \
-                                      --volume "/etc/letsencrypt/live/${unique_name}.${public_domain}/fullchain.pem:/certs/fullchain.pem" \
-                                      --volume "/etc/letsencrypt/live/${unique_name}.${public_domain}/privkey.pem:/certs/privkey.pem" \
+                                      --volume "/etc/letsencrypt/live/${public_domain}/fullchain.pem:/certs/fullchain.pem" \
+                                      --volume "/etc/letsencrypt/live/${public_domain}/privkey.pem:/certs/privkey.pem" \
                                       --volume /etc/rancher_nginx.conf:/etc/nginx/conf.d/default.conf:ro \
                                       -p 80:80 \
                                       -p 443:443 \
